@@ -26,6 +26,9 @@
 #include "BleInit.h"
 
 
+uint8_t BleFifo[BLE_FIFO_LEN] = {0};
+volatile uint8_t BleRecFlag = 0;
+
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static ble_nus_t                        m_nus;                                      /**< Structure to identify the Nordic UART Service. */
@@ -151,29 +154,16 @@ static void advertising_init(void)
 /**@snippet [Handling the data received over BLE] */
 void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
-    if (0x31 == p_data[0])//协议头
+    if (!BleRecFlag)
     {
-        switch(p_data[1])
+        if (length > BLE_FIFO_LEN)
         {
-            case 0x32://命令
-                if(p_data[2]==0x30)//控制信息
-                    nrf_gpio_pin_clear(20);
-                else if (p_data[2]==0x31)//控制信息
-                    nrf_gpio_pin_set(20);
-            break;
-            case 0x33://命令
-                    if(p_data[2]==0x30)//控制信息
-                        nrf_gpio_pin_clear(21);
-                else if (p_data[2]==0x31)//控制信息
-                    nrf_gpio_pin_set(21);
-            break;
-            case 0x34://命令
-                 if(p_data[2]==0x30)//控制信息
-                    nrf_gpio_pin_clear(22);
-                else if (p_data[2]==0x31)//控制信息
-                    nrf_gpio_pin_set(22);
-            break;
+            length = BLE_FIFO_LEN;
         }
+
+        memset(BleFifo, 0x00, BLE_FIFO_LEN);
+        memcpy(BleFifo, p_data, length);
+        BleRecFlag = 1;
     }
 }
 /**@snippet [Handling the data received over BLE] */

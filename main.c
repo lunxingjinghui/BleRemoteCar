@@ -25,6 +25,9 @@
 #include "BleInit.h"
 
 
+extern uint8_t BleFifo[];
+extern volatile uint8_t BleRecFlag;
+
 /**@brief  Application main function.
  */
 int main(void)
@@ -33,8 +36,40 @@ int main(void)
     BleInit();
     
     // Enter main loop
-    for (;;)
+    while (1)
     {
+        if (BleRecFlag)
+        {
+            if (0x31 == BleFifo[0])//–≠“ÈÕ∑
+            {
+                switch(BleFifo[1])
+                {
+                    case 0x32://√¸¡Ó
+                        if(BleFifo[2]==0x30)
+                        {
+
+                        }
+                    break;
+
+                    case 0x33://√¸¡Ó
+                            if(BleFifo[2]==0x30)
+                            {
+
+                            }
+                    break;
+
+                    case 0x34://√¸¡Ó
+                         if(BleFifo[2]==0x30)
+                         {
+
+                         }
+                    break;
+                }
+            }
+
+            BleRecFlag = 0;
+        }
+
         power_manage();
     }
 }

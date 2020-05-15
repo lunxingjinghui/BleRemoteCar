@@ -36,6 +36,8 @@
 
 #define DEVICE_NAME                     "BleRemoteCar"                               /**< Name of device. Will be included in the advertising data. */
 
+#define BLE_FIFO_LEN                    64
+
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
 
