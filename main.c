@@ -31,17 +31,11 @@
 #include "ble_conn_params.h"
 #include "softdevice_handler.h"
 #include "app_timer.h"
-#include "app_button.h"
 #include "ble_nus.h"
-#include "simple_uart.h"
 #include "boards.h"
 #include "ble_error_log.h"
 #include "ble_debug_assert_handler.h"
 
-#define WAKEUP_BUTTON_PIN               BUTTON_0                                    /**< Button used to wake up the application. */
-
-#define ADVERTISING_LED_PIN_NO          LED_0                                       /**< LED to indicate advertising state. */
-#define CONNECTED_LED_PIN_NO            LED_1                                       /**< LED to indicate connected state. */
 
 #define DEVICE_NAME                     "Nordic_UART"                               /**< Name of device. Will be included in the advertising data. */
 
@@ -69,8 +63,6 @@
 #define SEC_PARAM_OOB                   0                                           /**< Out Of Band data not available. */
 #define SEC_PARAM_MIN_KEY_SIZE          7                                           /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                          /**< Maximum encryption key size. */
-
-#define START_STRING                    "Start...\n"                                /**< The string that will be sent over the UART when the application starts. */
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -118,21 +110,6 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
-}
-
-
-/**@brief   Function for the LEDs initialization.
- *
- * @details Initializes all LEDs used by this application.
- */
-static void leds_init(void)
-{
-    nrf_gpio_cfg_output(ADVERTISING_LED_PIN_NO);
-    nrf_gpio_cfg_output(CONNECTED_LED_PIN_NO);
-	
-		nrf_gpio_cfg_output(20);
-    nrf_gpio_cfg_output(21);
-	  nrf_gpio_cfg_output(22);
 }
 
 
@@ -214,40 +191,30 @@ static void advertising_init(void)
 /**@snippet [Handling the data received over BLE] */
 void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
-    for (int i = 0; i < length; i++)
+    if (0x31 == p_data[0])//协议头
     {
-        simple_uart_put(p_data[i]);
+        switch(p_data[1])
+        {
+            case 0x32://命令
+                if(p_data[2]==0x30)//控制信息
+                    nrf_gpio_pin_clear(20);
+                else if (p_data[2]==0x31)//控制信息
+                    nrf_gpio_pin_set(20);
+            break;
+            case 0x33://命令
+                    if(p_data[2]==0x30)//控制信息
+                        nrf_gpio_pin_clear(21);
+                else if (p_data[2]==0x31)//控制信息
+                    nrf_gpio_pin_set(21);
+            break;
+            case 0x34://命令
+                 if(p_data[2]==0x30)//控制信息
+                    nrf_gpio_pin_clear(22);
+                else if (p_data[2]==0x31)//控制信息
+                    nrf_gpio_pin_set(22);
+            break;
+        }
     }
-    simple_uart_put('\n');
-/**@brief    一个简单的LED控制协议
- *
- * @details  如发送命令121，第一位数字1表示协议头，第二位数字2表示控制某个LED的命令，第三个数字1代表控制信息：开灯
- *           
- */
-		if (0x31 == p_data[0])//协议头
-		{
-			switch(p_data[1])
-			{
-				case 0x32://命令
-					if(p_data[2]==0x30)//控制信息
-						nrf_gpio_pin_clear(20);
-					else if	(p_data[2]==0x31)//控制信息
-						nrf_gpio_pin_set(20);
-				break;
-				case 0x33://命令
-						if(p_data[2]==0x30)//控制信息
-							nrf_gpio_pin_clear(21);
-					else if	(p_data[2]==0x31)//控制信息
-						nrf_gpio_pin_set(21);
-				break;
-				case 0x34://命令
-					 if(p_data[2]==0x30)//控制信息
-						nrf_gpio_pin_clear(22);
-					else if	(p_data[2]==0x31)//控制信息
-						nrf_gpio_pin_set(22);
-				break;
-			}
-		}
 }
 /**@snippet [Handling the data received over BLE] */
 
@@ -374,14 +341,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
-            nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 
             break;
             
         case BLE_GAP_EVT_DISCONNECTED:
-            nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
             advertising_start();
@@ -422,16 +386,18 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
             { 
-                nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
-
-                // Configure buttons with sense level low as wakeup source.
-                nrf_gpio_cfg_sense_input(WAKEUP_BUTTON_PIN,
-                                         BUTTON_PULL,
-                                         NRF_GPIO_PIN_SENSE_LOW);
-                
-                // Go to system-off mode (this function will not return; wakeup will cause a reset)
-                err_code = sd_power_system_off();    
-                APP_ERROR_CHECK(err_code);
+                while(1);           // LIN WAIT FIX ：核心板没有按键，没有led灯，不能按键唤醒，程序不能进入低功耗模式
+//
+//                nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
+//
+//                // Configure buttons with sense level low as wakeup source.
+//                nrf_gpio_cfg_sense_input(WAKEUP_BUTTON_PIN,
+//                                         BUTTON_PULL,
+//                                         NRF_GPIO_PIN_SENSE_LOW);
+//
+//                // Go to system-off mode (this function will not return; wakeup will cause a reset)
+//                err_code = sd_power_system_off();
+//                APP_ERROR_CHECK(err_code);
             }
             break;
 
@@ -472,15 +438,6 @@ static void ble_stack_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief  Function for configuring the buttons.
- */
-static void buttons_init(void)
-{
-    nrf_gpio_cfg_sense_input(WAKEUP_BUTTON_PIN,
-                             BUTTON_PULL, 
-                             NRF_GPIO_PIN_SENSE_LOW);    
-}
-
 
 /**@brief  Function for placing the application in low power state while waiting for events.
  */
@@ -491,175 +448,17 @@ static void power_manage(void)
 }
 
 
-/**@brief  Function for initializing the UART module.
- */
-static void uart_init(void)
-{
-    /**@snippet [UART Initialization] */
-    simple_uart_config(RTS_PIN_NUMBER, TX_PIN_NUMBER, CTS_PIN_NUMBER, RX_PIN_NUMBER, HWFC);
-    
-    NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
-    
-    NVIC_SetPriority(UART0_IRQn, APP_IRQ_PRIORITY_LOW);
-    NVIC_EnableIRQ(UART0_IRQn);
-    /**@snippet [UART Initialization] */
-}
-
-
-/**@brief   Function for handling UART interrupts.
- *
- * @details This function will receive a single character from the UART and append it to a string.
- *          The string will be be sent over BLE when the last character received was a 'new line'
- *          i.e '\n' (hex 0x0D) or if the string has reached a length of @ref NUS_MAX_DATA_LENGTH.
- */
-void UART0_IRQHandler(void)
-{
-    static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
-    static uint8_t index = 0;
-    uint32_t err_code;
-
-    /**@snippet [Handling the data received over UART] */
-
-    data_array[index] = simple_uart_get();
-    index++;
-
-    if ((data_array[index - 1] == '\n') || (index >= (BLE_NUS_MAX_DATA_LEN - 1)))
-    {
-        err_code = ble_nus_send_string(&m_nus, data_array, index + 1);
-        if (err_code != NRF_ERROR_INVALID_STATE)
-        {
-            APP_ERROR_CHECK(err_code);
-        }
-        
-        index = 0;
-    }
-
-    /**@snippet [Handling the data received over UART] */
-}
-
-/////////////////////////////////////////////////////////////
-#define PIN_COUNT 27
-#define PIN_MAX 31
-void testpin(void)
-{
-	uint32_t pin_cnf[PIN_COUNT] = {0,1,2,3,4,5,6,7,8,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,28,29,30};
-	uint32_t pin_gnd[PIN_MAX] = {0};
-	uint32_t pin_success[PIN_MAX] = {0};
-	uint32_t pin_IO[PIN_MAX] = {0};
-	uint32_t pin_vcc[PIN_MAX] = {0};		
-	uint8_t i=0,j=0,k=0,temp1=0,temp2=0,temp3=0;
-
-	for (; k != PIN_COUNT;k++)
-	{	
-		j = pin_cnf[k];
-		for (i=0; i<PIN_COUNT; i++)
-		{
-			nrf_gpio_cfg_output(i);
-			nrf_gpio_pin_set(i);
-		}
-
-		nrf_gpio_cfg_input(j, GPIO_PIN_CNF_PULL_Pulldown);//
-		
-		if (0 == nrf_gpio_pin_read(j))//
-				temp1 = 0;
-		else
-				temp1 = 1;
-		
-		for (i=0; i<PIN_COUNT; i++)
-		{
-			nrf_gpio_cfg_output(i);
-			nrf_gpio_pin_clear(i);
-		}
-
-		nrf_gpio_cfg_input(j, GPIO_PIN_CNF_PULL_Pullup);//
-		if (0 == nrf_gpio_pin_read(j))//
-			temp2 = 0;
-		else
-			temp2 = 1;
-		
-		if ((0 == temp1) && (0 == temp2))
-			pin_gnd[j] = 1;//
-		if ((0 == temp1) && (1 == temp2))
-			pin_success[j] = 1;//
-		if ((1 == temp1) && (0 == temp2))
-			pin_IO[j] = 1;//
-		if ((1 == temp1) && (1 == temp2))
-			pin_vcc[j] = 1;//
-	}
-	
-	printf("\r\n*******************************************************************************\r\n");
-	printf("\r\n正常情况下，所有引脚都不与GND VCC 或IO短路，其中Pin 9，11，26，27不参与短路检测\r\n");
-	printf("\r\n以下引脚正常\r\n");
-	for (i = 0; i < PIN_MAX; i++)
-	{
-		if (pin_success[i])
-			printf("%d ", i);
-	}
-	printf("\r\n以下引脚与GND短路\r\n");
-	for (i = 0; i < PIN_MAX; i++)
-	{
-		if (pin_gnd[i])
-		{
-			printf("%d ", i);
-			temp3 = 1;
-		}
-	}
-	printf("\r\n以下引脚与IO管脚短路\r\n");
-	for (i = 0; i < PIN_MAX; i++)
-	{
-		if (pin_IO[i])
-		{	
-			printf("%d ", i);
-			temp3 = 1;
-		}
-	}
-	printf("\r\n以下引脚与VCC短路\r\n");
-	for (i = 0; i < PIN_MAX; i++)
-	{
-		if (pin_vcc[i])
-		{
-			printf("%d ", i);
-			temp3 = 1;
-		}
-	}
-	if (1 == temp3)
-		printf("\r\n短路测试不通过！！！！！！！！！！！！！！！！！！！！！！！！！！\r\n");
-	else
-		printf("\r\n短路测试通过\r\n");
-	
-	printf("\r\n串口发送‘Y’或‘y’,进行下一步测试，发送‘Q’或‘q’重新进行短路测试\r\n");
-}
-
-
 /**@brief  Application main function.
  */
 int main(void)
 {
-	  simple_uart_config(RTS_PIN_NUMBER, TX_PIN_NUMBER, CTS_PIN_NUMBER, RX_PIN_NUMBER, HWFC);
-		testpin();
-//		while(1)
-//		{
-//			uint8_t cr = simple_uart_get();
-//			if(cr == 'q' || cr == 'Q')
-//			{
-//				testpin();
-//			}
-//			if(cr == 'y' || cr == 'Y')
-//				break;
-//		}
-    // Initialize
-    leds_init();
     timers_init();
-    buttons_init();
-    uart_init();	
     ble_stack_init();
     gap_params_init();
     services_init();
     advertising_init();
     conn_params_init();
     sec_params_init();
-    
-    simple_uart_putstring(START_STRING);
     
     advertising_start();
     
