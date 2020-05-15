@@ -333,9 +333,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
-            { 
-                while(1);           // LIN WAIT FIX ：核心板没有按键，没有led灯，不能按键唤醒，程序不能进入低功耗模式
-//
+            {
+                advertising_start();    // LIN WAIT FIX ：核心板没有按键，没有led灯，不能按键唤醒，程序不能进入低功耗模式
+                
 //                nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
 //
 //                // Configure buttons with sense level low as wakeup source.
