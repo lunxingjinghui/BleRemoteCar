@@ -436,6 +436,21 @@
               <FileType>1</FileType>
               <FilePath>.\..\main.c</FilePath>
             </File>
+            <File>
+              <FileName>BleInit.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\BleInit.c</FilePath>
+            </File>
+            <File>
+              <FileName>PotocolParser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\PotocolParser.c</FilePath>
+            </File>
+            <File>
+              <FileName>MotorDev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\MotorDev.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -923,6 +938,21 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\..\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>BleInit.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\BleInit.c</FilePath>
+            </File>
+            <File>
+              <FileName>PotocolParser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\PotocolParser.c</FilePath>
+            </File>
+            <File>
+              <FileName>MotorDev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\MotorDev.c</FilePath>
             </File>
           </Files>
         </Group>
