@@ -23,54 +23,25 @@
 
 #include <stdint.h>
 #include "BleInit.h"
+#include "PotocolParser.h"
+#include "MotorDev.h"
 
-
-extern uint8_t BleFifo[];
-extern volatile uint8_t BleRecFlag;
 
 /**@brief  Application main function.
  */
 int main(void)
 {
+    MotorInit();
+
     timers_init();
     BleInit();
     
     // Enter main loop
     while (1)
     {
-        if (BleRecFlag)
-        {
-            if (0x31 == BleFifo[0])//–≠“ÈÕ∑
-            {
-                switch(BleFifo[1])
-                {
-                    case 0x32://√¸¡Ó
-                        if(BleFifo[2]==0x30)
-                        {
-
-                        }
-                    break;
-
-                    case 0x33://√¸¡Ó
-                            if(BleFifo[2]==0x30)
-                            {
-
-                            }
-                    break;
-
-                    case 0x34://√¸¡Ó
-                         if(BleFifo[2]==0x30)
-                         {
-
-                         }
-                    break;
-                }
-            }
-
-            BleRecFlag = 0;
-        }
-
         power_manage();
+
+        PotocolParser();
     }
 }
 

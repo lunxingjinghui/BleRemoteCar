@@ -27,6 +27,7 @@
 
 
 uint8_t BleFifo[BLE_FIFO_LEN] = {0};
+uint8_t BleRecLen = 0;
 volatile uint8_t BleRecFlag = 0;
 
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
@@ -160,8 +161,9 @@ void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
             length = BLE_FIFO_LEN;
         }
 
+        BleRecLen = length;
         memset(BleFifo, 0x00, BLE_FIFO_LEN);
-        memcpy(BleFifo, p_data, length);
+        memcpy(BleFifo, p_data, BleRecLen);
         BleRecFlag = 1;
     }
 }
