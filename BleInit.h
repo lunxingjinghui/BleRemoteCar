@@ -47,7 +47,7 @@
 #define NUS_UUID_NUS_RX_CHARACTERISTIC  0x8001                                      /**< The UUID of the RX Characteristic. */
 
 #define APP_ADV_INTERVAL                0x800                                       /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                           /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_TIMEOUT_IN_SECONDS      0                                           /**< The advertising timeout (in units of seconds). */
 
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS            2                                           /**< Maximum number of simultaneously created timers. */
