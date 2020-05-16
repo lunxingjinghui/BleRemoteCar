@@ -130,7 +130,7 @@ static void advertising_init(void)
     uint32_t      err_code;
     ble_advdata_t advdata;
     ble_advdata_t scanrsp;
-    uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+    uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     
     ble_uuid_t adv_uuids[] = {{BLE_UUID_NUS_SERVICE, m_nus.uuid_type}};
 
@@ -337,8 +337,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
             {
-                advertising_start();    // LIN WAIT FIX ：核心板没有按键，没有led灯，不能按键唤醒，程序不能进入低功耗模式
-                
+                // LIN WAIT FIX ：核心板没有按键，没有led灯，不能按键唤醒，程序不能进入低功耗模式
 //                nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
 //
 //                // Configure buttons with sense level low as wakeup source.
