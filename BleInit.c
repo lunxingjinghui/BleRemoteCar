@@ -114,6 +114,9 @@ static void gap_params_init(void)
 
     err_code = sd_ble_gap_ppcp_set(&gap_conn_params);
     APP_ERROR_CHECK(err_code);
+
+    err_code = sd_ble_gap_tx_power_set(TX_POWER_LEVEL);     // 修改发射功率，系统一上电默认的是0dBm，并且可以动态的修改发送功率。系统在广播的时候也可以修改功率。
+    APP_ERROR_CHECK(err_code);
 }
 
 

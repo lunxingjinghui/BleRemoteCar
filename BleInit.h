@@ -34,9 +34,11 @@
 #include "ble_debug_assert_handler.h"
 
 
-#define DEVICE_NAME                     "BleRemoteCar"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "BleRemoteCar"                              /**< Name of device. Will be included in the advertising data. */
 
 #define BLE_FIFO_LEN                    64
+
+#define TX_POWER_LEVEL                  -16                                          /**< TX Power Level value. This will be set both in the TX Power service, in the advertising data, and also used to set the radio transmit power. */
 
 #define APP_ADV_INTERVAL                0x800                                       /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
