@@ -40,8 +40,14 @@
 
 #define TX_POWER_LEVEL                  -16                                         /**< TX Power Level value. This will be set both in the TX Power service, in the advertising data, and also used to set the radio transmit power. */
 
+#define NUS_BASE_UUID                  {{0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x00, 0x00, 0x40, 0x6E}} /**< Used vendor specific UUID. */
+#define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_BLE                           /**< UUID type for the Nordic UART Service (vendor specific). */
+#define NUS_UUID_NUS_SERVICE            0x6006                                      /**< The UUID of the Nordic UART Service. */
+#define NUS_UUID_NUS_TX_CHARACTERISTIC  0x8002                                      /**< The UUID of the TX Characteristic. */
+#define NUS_UUID_NUS_RX_CHARACTERISTIC  0x8001                                      /**< The UUID of the RX Characteristic. */
+
 #define APP_ADV_INTERVAL                0x800                                       /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      0                                           /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_TIMEOUT_IN_SECONDS      180                                           /**< The advertising timeout (in units of seconds). */
 
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS            2                                           /**< Maximum number of simultaneously created timers. */

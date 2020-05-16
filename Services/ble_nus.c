@@ -10,6 +10,7 @@
  *
  */
 
+#include "BleInit.h"
 #include "ble_nus.h"
 #include "nordic_common.h"
 #include "ble_srv_common.h"
@@ -85,13 +86,12 @@ static void on_write(ble_nus_t * p_nus, ble_evt_t * p_ble_evt)
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-static uint32_t rx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
+static uint32_t rx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init, ble_uuid_t ble_uuid)
 {
     /**@snippet [Adding proprietary characteristic to S110 SoftDevice] */
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_md_t cccd_md;
     ble_gatts_attr_t    attr_char_value;
-    ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
     
     memset(&cccd_md, 0, sizeof(cccd_md));
@@ -103,15 +103,14 @@ static uint32_t rx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init
     
     memset(&char_md, 0, sizeof(char_md));
     
+    char_md.char_props.read   = 1;
     char_md.char_props.notify = 1;
+    char_md.char_props.write  = 1;
     char_md.p_char_user_desc  = NULL;
     char_md.p_char_pf         = NULL;
     char_md.p_user_desc_md    = NULL;
     char_md.p_cccd_md         = &cccd_md;
     char_md.p_sccd_md         = NULL;
-    
-    ble_uuid.type             = p_nus->uuid_type;
-    ble_uuid.uuid             = BLE_UUID_NUS_RX_CHARACTERISTIC;
     
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -147,11 +146,10 @@ static uint32_t rx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-static uint32_t tx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
+static uint32_t tx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init, ble_uuid_t ble_uuid)
 {
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_t    attr_char_value;
-    ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
     
     memset(&char_md, 0, sizeof(char_md));
@@ -163,9 +161,6 @@ static uint32_t tx_char_add(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init
     char_md.p_user_desc_md              = NULL;
     char_md.p_cccd_md                   = NULL;
     char_md.p_sccd_md                   = NULL;
-    
-    ble_uuid.type                       = p_nus->uuid_type;
-    ble_uuid.uuid                       = BLE_UUID_NUS_TX_CHARACTERISTIC;
     
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -224,8 +219,7 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
 {
     uint32_t        err_code;
     ble_uuid_t      ble_uuid;
-    ble_uuid128_t   nus_base_uuid = {0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0,
-                                     0x93, 0xF3, 0xA3, 0xB5, 0x00, 0x00, 0x40, 0x6E};
+    ble_uuid128_t   nus_base_uuid = NUS_BASE_UUID;
 
     if ((p_nus == NULL) || (p_nus_init == NULL))
     {
@@ -247,8 +241,8 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
         return err_code;
     }
 
-    ble_uuid.type = p_nus->uuid_type;
-    ble_uuid.uuid = BLE_UUID_NUS_SERVICE;
+    ble_uuid.type = NUS_SERVICE_UUID_TYPE;
+    ble_uuid.uuid = NUS_UUID_NUS_SERVICE;
 
     // Add service.
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
@@ -260,20 +254,23 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
         return err_code;
     }
     
+    // Add TX Characteristic.
+    ble_uuid.type = NUS_SERVICE_UUID_TYPE;
+    ble_uuid.uuid = NUS_UUID_NUS_RX_CHARACTERISTIC;
+    err_code = tx_char_add(p_nus, p_nus_init, ble_uuid);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
     // Add RX Characteristic.
-    err_code = rx_char_add(p_nus, p_nus_init);
+    ble_uuid.type = NUS_SERVICE_UUID_TYPE;
+    ble_uuid.uuid = NUS_UUID_NUS_TX_CHARACTERISTIC;
+    err_code = rx_char_add(p_nus, p_nus_init, ble_uuid);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
     }
 
-    // Add TX Characteristic.
-    err_code = tx_char_add(p_nus, p_nus_init);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
-    
     return NRF_SUCCESS;
 }
 

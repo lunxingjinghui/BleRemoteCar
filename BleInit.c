@@ -132,7 +132,7 @@ static void advertising_init(void)
     ble_advdata_t scanrsp;
     uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     
-    ble_uuid_t adv_uuids[] = {{BLE_UUID_NUS_SERVICE, m_nus.uuid_type}};
+    ble_uuid_t adv_uuids[] = {{NUS_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
 
     memset(&advdata, 0, sizeof(advdata));
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
